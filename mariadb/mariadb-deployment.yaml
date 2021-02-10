@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-service
+  namespace: prestashoptp
+  labels:
+    app: prestashop
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: prestashop
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-deployment
+  namespace: prestashoptp
+spec:
+  selector:
+    matchLabels:
+      app: prestashop
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: prestashop
+    spec:
+      containers:
+      - image: bitnami/mariadb:10.1
+        name: mariadb
+        env:
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret
+              key: mariadb_root_password
+        ports:
+        - containerPort: 3306
+          name: mariadb
+        volumeMounts:
+        - name: mariadb-ps
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mariadb-ps
+        persistentVolumeClaim:
+          claimName: mariadb-pvc
+

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prestashop-cm
+  namespace: prestashoptp
+data:
+  prestashop_first_name: "Toureau"
+  prestashop_last_name: "Thomas"

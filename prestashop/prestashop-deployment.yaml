@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prestashop-service
+  namespace: prestashoptp
+  labels:
+    app: prestashop
+spec:
+  ports:
+    - nodePort: 31345
+      port: 80
+      targetPort: 80
+  selector:
+    app: prestashop
+  type: NodePort
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prestashop-deployment
+  namespace: prestashoptp
+  labels:
+    app: prestashop
+spec:
+  selector:
+    matchLabels:
+      app: prestashop
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: prestashop
+    spec:
+      containers:
+      - image: bitnami/prestashop:1.7
+        name: prestashop
+        env:
+          - name: PRESTASHOP_DATABASE_NAME
+            valueFrom:
+              secretKeyRef:
+                name: secret
+                key: prestashop_database_name
+          - name: PRESTASHOP_DATABASE_USER
+            valueFrom:
+              secretKeyRef:
+                name: secret
+                key: prestashop_database_user
+          - name: PRESTASHOP_DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: secret
+                key: prestashop_database_password
+          - name: PRESTASHOP_FIRST_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: prestashop-cm
+                key: prestashop_first_name
+          - name: PRESTASHOP_LAST_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: prestashop-cm
+                key: prestashop_last_name
+        ports:
+        - containerPort: 80
+          name: prestashop
+        volumeMounts:
+        - name: prestashop-ps
+          mountPath: /var/www/html
+      volumes:
+      - name: prestashop-ps
+        persistentVolumeClaim:
+          claimName: prestashop-pvc
